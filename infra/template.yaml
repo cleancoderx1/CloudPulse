@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: python3.9      # Lambda runtime
+    Timeout: 10             # seconds
+
+Resources:
+
+  MonitoringFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handler.lambda_handler   # entry point
+      CodeUri: ../lambda/               # relative path to code
+      Events:
+        ApiEvent:
+          Type: Api                   # HTTP API Gateway trigger
+          Properties:
+            Path: /metrics
+            Method: post
+
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: MonitoringAlerts      # SNS topic for alarms
+
+  HighErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: HighErrorRate
+      Namespace: MyService
+      MetricName: ErrorRate
+      Statistic: Average
+      Period: 60                        # seconds
+      EvaluationPeriods: 1
+      Threshold: 1                      # percent
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref SNSTopic                # send to SNS when triggered
+
+  HighLatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: HighLatency
+      Namespace: MyService
+      MetricName: LatencyMs
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 300                    # milliseconds
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref SNSTopic
