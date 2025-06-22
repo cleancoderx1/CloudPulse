@@ -2,7 +2,7 @@
 ### README.md
 
 
-# Serverless Monitoring & Alerting System
+# CloudPulse Alerting System
 
 A fully serverless pipeline for custom metric ingestion and threshold‑based alerting on AWS.
 
